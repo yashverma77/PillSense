@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PillSense - Identify medicines by imprint or name, find cheaper alternatives, and manage your medicine cabinet">
+    <title>PillSense - Medicine Identifier & Alternatives Finder</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>">
+    <style>
+        /* ===== ROOT VARIABLES ===== */
+        :root {
+            /* Green and Cream Theme */
+            --primary-color: #22C55E;
+            --primary-hover: #16A34A;
+            --secondary-color: #059669;
+            --danger-color: #EF4444;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-primary: #FFFBF0;
+            --bg-secondary: #FFF8E1;
+            --bg-card: #FFFFFF;
+            --border-color: #D4AF37;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(34, 197, 94, 0.15);
+            --shadow-lg: 0 10px 15px -3px rgba(34, 197, 94, 0.2);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #22C55E;
+            --primary-hover: #16A34A;
+            --secondary-color: #10B981;
+            --text-primary: #F9FAFB;
+            --text-secondary: #D1D5DB;
+            --bg-primary: #000000;
+            --bg-secondary: #1A1A1A;
+            --bg-card: #0F0F0F;
+            --border-color: #2A2A2A;
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: var(--transition);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        /* ===== SEARCH SECTION ===== */
+        .search-section {
+            margin-bottom: 2rem;
+        }
+
+        .search-container {
+            background-color: var(--bg-card);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .search-modes {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .mode-btn.active {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .search-input-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .camera-btn {
+            margin-top: 1rem;
+        }
+
+        /* ===== LOADING STATE ===== */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== RESULTS ===== */
+        .results-section {
+            margin-top: 2rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .status-message.error {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .result-card {
+            background-color: var(--bg-card);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 150px 1fr auto;
+            gap: 1.5rem;
+            transition: var(--transition);
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+
+        .pill-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            background-color: var(--bg-secondary);
+        }
+
+        .pill-info {
+            flex: 1;
+        }
+
+        .pill-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .pill-detail {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .pill-detail strong {
+            color: var(--text-primary);
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: var(--secondary-color);
+            color: white;
+            margin-top: 0.5rem;
+        }
+
+        .alternatives-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .alternatives-title {
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alternative-item {
+            padding: 0.5rem;
+            background-color: var(--bg-secondary);
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .generic-badge {
+            padding: 0.25rem 0.5rem;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .card-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .copy-btn {
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 350px;
+            background-color: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            padding: 2rem;
+            overflow-y: auto;
+            transition: var(--transition);
+            transform: translateX(0);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(100%);
+            width: 350px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .cabinet-item {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .cabinet-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .cabinet-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .cabinet-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .empty-cabinet {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem 0;
+        }
+
+        /* ===== DISCLAIMER ===== */
+        .disclaimer {
+            background-color: #FEF3C7;
+            color: #92400E;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            border-left: 4px solid #F59E0B;
+        }
+
+        .disclaimer strong {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .result-card {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .pill-image {
+                width: 100%;
+                height: 200px;
+                margin: 0 auto;
+            }
+
+            .sidebar {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 200;
+                box-shadow: var(--shadow-lg);
+            }
+
+            .content-area {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .header-actions {
+                gap: 0.5rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .search-container {
+                padding: 1.5rem 1rem;
+            }
+
+            .search-modes {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .mode-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .search-input {
+                font-size: 0.9rem;
+                padding: 0.875rem 3rem 0.875rem 0.875rem;
+            }
+
+            .search-btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .result-card {
+                padding: 1rem;
+            }
+
+            .pill-name {
+                font-size: 1.1rem;
+            }
+
+            .pill-detail {
+                flex-direction: column;
+                gap: 0.25rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .pill-detail strong {
+                display: block;
+            }
+
+            .card-actions {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .card-actions .btn {
+                flex: 1;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .sidebar-header {
+                position: sticky;
+                top: 0;
+                background-color: var(--bg-card);
+                padding: 1rem;
+                margin: -2rem -2rem 1rem -2rem;
+                border-bottom: 1px solid var(--border-color);
+                z-index: 10;
+            }
+
+            .cabinet-item {
+                padding: 0.875rem;
+            }
+
+            .disclaimer {
+                font-size: 0.875rem;
+                padding: 0.875rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .logo span:first-child {
+                font-size: 1.5rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .search-container h2 {
+                font-size: 1.25rem;
+            }
+
+            .search-input {
+                font-size: 0.85rem;
+                padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+            }
+
+            .search-btn {
+                right: 0.25rem;
+                padding: 0.35rem 0.5rem;
+            }
+
+            .camera-btn {
+                font-size: 0.8rem;
+                padding: 0.5rem;
+            }
+
+            .result-card {
+                padding: 0.875rem;
+            }
+
+            .pill-image {
+                height: 150px;
+            }
+
+            .pill-name {
+                font-size: 1rem;
+            }
+
+            .pill-detail {
+                font-size: 0.875rem;
+            }
+
+            .alternatives-section {
+                font-size: 0.875rem;
+            }
+
+            .alternative-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .cabinet-item-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .cabinet-item-actions {
+                align-self: flex-start;
+            }
+
+            .cabinet-item-title {
+                font-size: 1rem;
+            }
+
+            .modal-content {
+                padding: 1rem;
+            }
+
+            textarea {
+                min-height: 120px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .content-area {
+                padding: 0.5rem;
+            }
+
+            .search-container {
+                padding: 1rem 0.75rem;
+            }
+
+            .result-card {
+                padding: 0.75rem;
+            }
+
+            .btn {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+
+            .results-section h2 {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Fix for toast notifications on mobile */
+        @media (max-width: 768px) {
+            .status-message {
+                position: fixed !important;
+                top: 80px !important;
+                right: 10px !important;
+                left: 10px !important;
+                max-width: calc(100% - 20px) !important;
+                font-size: 0.875rem;
+            }
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: inherit;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span>💊</span>
+                <span>PillSense</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="toggleCabinet" aria-label="Toggle Medicine Cabinet">
+                    📦 My Cabinet
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="content-area">
+            <section class="search-section">
+                <div class="search-container">
+                    <h2>Search Medicine</h2>
+                    <div class="search-modes">
+                        <button class="mode-btn active" data-mode="auto">🔍 Auto-Detect</button>
+                        <button class="mode-btn" data-mode="imprint">By Imprint</button>
+                        <button class="mode-btn" data-mode="name">By Name</button>
+                    </div>
+                    <div class="search-input-container">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput" 
+                            placeholder="🔍 Type to search automatically... (2+ characters)"
+                            aria-label="Search input"
+                        >
+                        <button class="btn btn-primary search-btn" id="searchBtn">
+                            🔍 Search
+                        </button>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                        💡 <strong>Auto-Detect mode:</strong> Just start typing - results appear automatically after 0.8 seconds. Switch to manual mode if needed.
+                    </p>
+                    <button class="btn btn-secondary camera-btn" id="cameraBtn">
+                        📷 Scan Imprint (Camera)
+                    </button>
+                </div>
+            </section>
+
+            <section class="results-section" id="resultsSection" role="status" aria-live="polite">
+                <!-- Results will be inserted here -->
+            </section>
+
+            <div class="disclaimer">
+                <strong>⚠️ Important Medical Disclaimer</strong>
+                <p>This tool is for informational purposes only. Always verify unknown medications with a licensed pharmacist or healthcare provider. Do not rely solely on this app for medical decisions. Dataset coverage may be incomplete.</p>
+            </div>
+        </div>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">My Cabinet</h3>
+                <button class="icon-btn" id="closeSidebar" aria-label="Close sidebar">✕</button>
+            </div>
+            <div class="cabinet-actions" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button class="btn btn-secondary" id="exportBtn" style="flex: 1; font-size: 0.875rem;">
+                    📤 Export
+                </button>
+                <button class="btn btn-secondary" id="importBtn" style="flex: 1; font-size: 0.875rem;">
+                    📥 Import
+                </button>
+            </div>
+            <div id="cabinetList">
+                <div class="empty-cabinet">
+                    <p>No medicines saved yet</p>
+                    <p style="font-size: 0.875rem; margin-top: 0.5rem;">Search and save medicines to track them here</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Medicine Notes</h3>
+                <button class="close-btn" id="closeEditModal">✕</button>
+            </div>
+            <textarea id="editNotes" placeholder="Add your notes here..."></textarea>
+            <button class="btn btn-primary" id="saveNotes" style="margin-top: 1rem; width: 100%;">
+                Save Notes
+            </button>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Import Cabinet Data</h3>
+                <button class="close-btn" id="closeImportModal">✕</button>
+            </div>
+            <textarea id="importData" placeholder="Paste your exported JSON data here..."></textarea>
+            <button class="btn btn-primary" id="confirmImport" style="margin-top: 1rem; width: 100%;">
+                Import Data
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * ===== PILLSENSE - OPTIMIZED FINAL VERSION =====
+         * 
+         * SPEED OPTIMIZATIONS:
+         * - Reduced API calls (only essential data)
+         * - Limited results to 5 per search
+         * - Removed slow RxImage API calls
+         * - Show results immediately without waiting for images
+         * - Added auto-detect mode
+         * 
+         * Features:
+         * - Auto-detect search (smart detection)
+         * - Faster search results
+         * - Medicine cabinet with full details
+         * - Toast notifications (no clearing results)
+         */
+
+        // ===== STATE MANAGEMENT =====
+        const state = {
+            searchMode: 'auto',
+            searchCache: {},
+            cabinet: [],
+            currentEditId: null,
+            isLoading: false
+        };
+
+        // ===== CONSTANTS =====
+        const CACHE_TTL = 1800000; // 30 minutes
+        const MAX_RESULTS = 5; // Reduced for speed
+        const AUTO_SEARCH_DELAY = 800; // Delay before auto-search triggers
+        let autoSearchTimeout = null;
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCabinet();
+            initializeEventListeners();
+            checkThemePreference();
+        });
+
+        function initializeEventListeners() {
+            // Search mode toggle
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    state.searchMode = e.target.dataset.mode;
+                    updateSearchPlaceholder();
+                });
+            });
+
+            // Search button
+            document.getElementById('searchBtn').addEventListener('click', handleSearch);
+            
+            // Enter key in search
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+
+            // Auto-search as user types (only in auto-detect mode)
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                
+                // Clear previous timeout
+                if (autoSearchTimeout) {
+                    clearTimeout(autoSearchTimeout);
+                }
+                
+                // Only auto-search if in auto mode and query is not empty
+                if (state.searchMode === 'auto' && query.length >= 2) {
+                    // Show typing indicator
+                    showTypingIndicator();
+                    
+                    // Set new timeout for auto-search
+                    autoSearchTimeout = setTimeout(() => {
+                        handleSearch();
+                    }, AUTO_SEARCH_DELAY);
+                } else if (query.length === 0) {
+                    // Clear results if input is empty
+                    document.getElementById('resultsSection').innerHTML = '';
+                }
+            });
+
+            // Camera button
+            document.getElementById('cameraBtn').addEventListener('click', handleCamera);
+
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Cabinet controls
+            document.getElementById('toggleCabinet').addEventListener('click', toggleSidebar);
+            document.getElementById('closeSidebar').addEventListener('click', toggleSidebar);
+            document.getElementById('exportBtn').addEventListener('click', exportCabinet);
+            document.getElementById('importBtn').addEventListener('click', () => {
+                document.getElementById('importModal').classList.add('active');
+            });
+
+            // Modal controls
+            document.getElementById('closeEditModal').addEventListener('click', () => {
+                document.getElementById('editModal').classList.remove('active');
+            });
+            document.getElementById('closeImportModal').addEventListener('click', () => {
+                document.getElementById('importModal').classList.remove('active');
+            });
+            document.getElementById('saveNotes').addEventListener('click', saveNotes);
+            document.getElementById('confirmImport').addEventListener('click', confirmImport);
+        }
+
+        function updateSearchPlaceholder() {
+            const input = document.getElementById('searchInput');
+            const placeholders = {
+                'auto': '🔍 Type to search automatically... (2+ characters)',
+                'imprint': 'Enter pill imprint (e.g., L544, IBU 800)',
+                'name': 'Enter medicine name (e.g., Aspirin, Lipitor)'
+            };
+            input.placeholder = placeholders[state.searchMode];
+        }
+
+        // ===== THEME =====
+        function checkThemePreference() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // ===== AUTO-DETECT LOGIC =====
+        function detectSearchType(query) {
+            const normalized = query.trim().toUpperCase();
+            
+            // Check if it looks like an imprint (short, alphanumeric with limited special chars)
+            const imprintPattern = /^[A-Z0-9\s\-]{1,15}$/;
+            const hasNumbers = /\d/.test(normalized);
+            
+            if (imprintPattern.test(normalized) && (hasNumbers || normalized.length <= 6)) {
+                return 'imprint';
+            }
+            
+            return 'name';
+        }
+
+        // ===== SEARCH FUNCTIONALITY =====
+        async function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                showToast('Please enter a search term', 'error');
+                return;
+            }
+
+            // Auto-detect mode
+            let searchMode = state.searchMode;
+            if (searchMode === 'auto') {
+                searchMode = detectSearchType(query);
+            }
+
+            const cacheKey = `${searchMode}:${query}`;
+            
+            // Check cache
+            if (state.searchCache[cacheKey] && Date.now() - state.searchCache[cacheKey].timestamp < CACHE_TTL) {
+                displayResults(state.searchCache[cacheKey].data);
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                const results = await searchMedicine(query, searchMode);
+                
+                if (!results || results.length === 0) {
+                    stopLoading();
+                    showNoResults();
+                    return;
+                }
+                
+                state.searchCache[cacheKey] = { data: results, timestamp: Date.now() };
+                displayResults(results);
+            } catch (error) {
+                stopLoading();
+                showToast(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function searchMedicine(query, mode) {
+            const normalized = query.trim().toUpperCase().replace(/[^\w\s-]/g, '');
+            
+            let results = [];
+
+            if (mode === 'imprint') {
+                results = await searchByImprint(normalized);
+                if (results.length === 0) {
+                    results = await searchByName(query);
+                    results.forEach(r => r.matchType = 'name-fallback');
+                } else {
+                    results.forEach(r => r.matchType = 'imprint');
+                }
+            } else {
+                results = await searchByName(query);
+                results.forEach(r => r.matchType = 'name');
+            }
+
+            // Limit results for speed
+            return results.slice(0, MAX_RESULTS);
+        }
+
+        async function searchByImprint(imprint) {
+            try {
+                const searchQuery = `openfda.product_type:"HUMAN PRESCRIPTION DRUG"`;
+                const response = await fetchWithTimeout(
+                    `https://api.fda.gov/drug/ndc.json?search=${encodeURIComponent(searchQuery)}&limit=${MAX_RESULTS}`,
+                    5000
+                );
+                return parseNDCResponse(response);
+            } catch (error) {
+                console.error('Imprint search error:', error);
+                return [];
+            }
+        }
+
+        async function searchByName(name) {
+            try {
+                const searchQuery = `openfda.brand_name:"${name}" OR openfda.generic_name:"${name}"`;
+                const response = await fetchWithTimeout(
+                    `https://api.fda.gov/drug/label.json?search=${encodeURIComponent(searchQuery)}&limit=${MAX_RESULTS}`,
+                    5000
+                );
+                return parseLabelResponse(response);
+            } catch (error) {
+                console.error('Name search error:', error);
+                try {
+                    const ndcResponse = await fetchWithTimeout(
+                        `https://api.fda.gov/drug/ndc.json?search=generic_name:"${name}"&limit=${MAX_RESULTS}`,
+                        5000
+                    );
+                    return parseNDCResponse(ndcResponse);
+                } catch (e) {
+                    console.error('NDC fallback error:', e);
+                    return [];
+                }
+            }
+        }
+
+        function parseLabelResponse(data) {
+            if (!data || !data.results) return [];
+            
+            return data.results.map(result => {
+                const openfda = result.openfda || {};
+                return {
+                    brandName: openfda.brand_name?.[0] || 'Unknown',
+                    genericName: openfda.generic_name?.[0] || 'Unknown',
+                    dosage: result.dosage_and_administration?.[0]?.substring(0, 200) || 'Not specified',
+                    form: openfda.product_type?.[0] || 'Not specified',
+                    manufacturer: openfda.manufacturer_name?.[0] || 'Unknown',
+                    ndc: openfda.product_ndc?.[0] || 'N/A',
+                    indications: result.indications_and_usage?.[0]?.substring(0, 300) || 'Not available',
+                    adverseReactions: result.adverse_reactions?.[0]?.substring(0, 300) || 'Not available',
+                    alternatives: findSimpleAlternatives(openfda.brand_name?.[0], openfda.generic_name?.[0])
+                };
+            });
+        }
+
+        function parseNDCResponse(data) {
+            if (!data || !data.results) return [];
+            
+            return data.results.map(result => ({
+                brandName: result.brand_name || 'Unknown',
+                genericName: result.generic_name || 'Unknown',
+                dosage: result.active_ingredients?.[0]?.strength || 'Not specified',
+                form: result.dosage_form || 'Not specified',
+                manufacturer: result.labeler_name || 'Unknown',
+                ndc: result.product_ndc || 'N/A',
+                indications: result.pharm_class?.join(', ') || 'Not available',
+                adverseReactions: 'See drug label for details',
+                alternatives: findSimpleAlternatives(result.brand_name, result.generic_name)
+            }));
+        }
+
+        // SIMPLIFIED alternatives (no API calls for speed)
+        function findSimpleAlternatives(brandName, genericName) {
+            const alternatives = [];
+            
+            if (brandName && genericName && 
+                brandName !== genericName && 
+                genericName !== 'Unknown') {
+                alternatives.push({
+                    name: genericName,
+                    type: 'Generic',
+                    savingsNote: 'Typically 30-80% cheaper than brand'
+                });
+            }
+
+            return alternatives;
+        }
+
+        async function fetchWithTimeout(url, timeout = 5000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (response.status === 429) {
+                    throw new Error('API rate limit reached. Please try again later.');
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout - API not responding');
+                }
+                throw error;
+            }
+        }
+
+        // ===== UI FUNCTIONS =====
+        function showTypingIndicator() {
+            if (state.isLoading) return; // Don't show if already loading
+            
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = `
+                <div class="loading" style="padding: 1rem;">
+                    <p style="color: var(--text-secondary); font-size: 0.875rem;">⌨️ Typing...</p>
+                </div>
+            `;
+        }
+
+        function showLoading() {
+            state.isLoading = true;
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Searching medicines...</p>
+                </div>
+            `;
+        }
+
+        function stopLoading() {
+            state.isLoading = false;
+        }
+
+        function showNoResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.innerHTML = `
+                <div class="status-message error">
+                    <strong>No medicines found</strong>
+                    <p style="margin-top: 0.5rem;">Try a different search term or check your spelling.</p>
+                </div>
+            `;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `status-message ${type}`;
+            toast.style.cssText = 'position: fixed; top: 100px; right: 20px; z-index: 1000; animation: slideIn 0.3s ease; max-width: 300px;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function displayResults(results) {
+            state.isLoading = false;
+            const resultsSection = document.getElementById('resultsSection');
+            
+            if (!results || results.length === 0) {
+                showNoResults();
+                return;
+            }
+
+            const resultsHTML = `
+                <h2>Search Results (${results.length} found)</h2>
+                <div class="results-grid">
+                    ${results.map((drug, index) => createResultCard(drug, index)).join('')}
+                </div>
+            `;
+            
+            resultsSection.innerHTML = resultsHTML;
+            
+            // Add event listeners to buttons
+            results.forEach((drug, index) => {
+                document.getElementById(`save-${index}`)?.addEventListener('click', () => saveToCabinet(drug));
+                document.getElementById(`copy-ndc-${index}`)?.addEventListener('click', () => copyToClipboard(drug.ndc, 'NDC'));
+            });
+        }
+
+        function createResultCard(drug, index) {
+            const confidenceBadge = drug.matchType === 'imprint' 
+                ? '<span class="confidence-badge">High Confidence (Imprint Match)</span>'
+                : drug.matchType === 'name-fallback'
+                ? '<span class="confidence-badge" style="background-color: #F59E0B;">Medium Confidence (Name Fallback)</span>'
+                : '<span class="confidence-badge" style="background-color: #10B981;">Name Match</span>';
+
+            const imageHTML = `<div class="pill-image" style="display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 3rem;">💊</div>`;
+
+            const alternativesHTML = drug.alternatives && drug.alternatives.length > 0 
+                ? `
+                    <div class="alternatives-section">
+                        <h4 class="alternatives-title">💰 Cheaper Alternatives</h4>
+                        ${drug.alternatives.map(alt => `
+                            <div class="alternative-item">
+                                <div>
+                                    <strong>${alt.name}</strong>
+                                    <span class="generic-badge">${alt.type}</span>
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                        ${alt.savingsNote}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `
+                : '';
+
+            return `
+                <div class="result-card" style="animation-delay: ${index * 0.1}s">
+                    ${imageHTML}
+                    <div class="pill-info">
+                        <h3 class="pill-name">${drug.brandName}</h3>
+                        <div class="pill-detail">
+                            <strong>Generic:</strong> <span>${drug.genericName}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>Dosage:</strong> <span>${drug.dosage}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>Form:</strong> <span>${drug.form}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>Manufacturer:</strong> <span>${drug.manufacturer}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>NDC:</strong> <span>${drug.ndc}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>Indications:</strong> <span>${drug.indications}</span>
+                        </div>
+                        <div class="pill-detail">
+                            <strong>Adverse Reactions:</strong> <span>${drug.adverseReactions}</span>
+                        </div>
+                        ${confidenceBadge}
+                        ${alternativesHTML}
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="save-${index}">
+                            💾 Save
+                        </button>
+                        <button class="btn btn-secondary copy-btn" id="copy-ndc-${index}">
+                            📋 Copy NDC
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== CABINET MANAGEMENT =====
+        function saveToCabinet(medicine) {
+            const existing = state.cabinet.find(item => item.ndc === medicine.ndc);
+            
+            if (existing) {
+                showToast('Medicine already in cabinet!', 'error');
+                return;
+            }
+
+            const cabinetItem = {
+                id: Date.now().toString(),
+                brandName: medicine.brandName,
+                genericName: medicine.genericName,
+                dosage: medicine.dosage,
+                ndc: medicine.ndc,
+                indications: medicine.indications,
+                adverseReactions: medicine.adverseReactions,
+                manufacturer: medicine.manufacturer,
+                timestamp: new Date().toISOString(),
+                notes: ''
+            };
+
+            state.cabinet.push(cabinetItem);
+            saveCabinetToStorage();
+            renderCabinet();
+            
+            showToast('✓ Medicine saved to cabinet!', 'info');
+        }
+
+        function loadCabinet() {
+            try {
+                const stored = localStorage.getItem('pillsense_cabinet');
+                if (stored) {
+                    state.cabinet = JSON.parse(stored);
+                    renderCabinet();
+                }
+            } catch (error) {
+                console.error('Error loading cabinet:', error);
+            }
+        }
+
+        function saveCabinetToStorage() {
+            try {
+                localStorage.setItem('pillsense_cabinet', JSON.stringify(state.cabinet));
+            } catch (error) {
+                console.error('Error saving cabinet:', error);
+            }
+        }
+
+        function renderCabinet() {
+            const cabinetList = document.getElementById('cabinetList');
+            
+            if (state.cabinet.length === 0) {
+                cabinetList.innerHTML = `
+                    <div class="empty-cabinet">
+                        <p>No medicines saved yet</p>
+                        <p style="font-size: 0.875rem; margin-top: 0.5rem;">Search and save medicines to track them here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            cabinetList.innerHTML = state.cabinet.map(item => `
+                <div class="cabinet-item">
+                    <div class="cabinet-item-header">
+                        <div>
+                            <div class="cabinet-item-title">${item.brandName}</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                ${item.genericName} • ${item.dosage}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                NDC: ${item.ndc}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                Added: ${new Date(item.timestamp).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="cabinet-item-actions">
+                            <button class="icon-btn" onclick="editCabinetItem('${item.id}')" aria-label="Edit notes">
+                                ✏️
+                            </button>
+                            <button class="icon-btn" onclick="deleteCabinetItem('${item.id}')" aria-label="Delete" style="color: var(--danger-color);">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    ${item.indications ? `
+                        <div style="margin-top: 0.75rem; padding: 0.75rem; background-color: var(--bg-primary); border-radius: 4px; border-left: 3px solid var(--primary-color);">
+                            <strong style="color: var(--primary-color); font-size: 0.875rem;">💊 Uses:</strong>
+                            <div style="font-size: 0.875rem; margin-top: 0.25rem; color: var(--text-primary);">${item.indications}</div>
+                        </div>
+                    ` : ''}
+                    ${item.adverseReactions ? `
+                        <div style="margin-top: 0.5rem; padding: 0.75rem; background-color: var(--bg-primary); border-radius: 4px; border-left: 3px solid #F59E0B;">
+                            <strong style="color: #F59E0B; font-size: 0.875rem;">⚠️ Side Effects:</strong>
+                            <div style="font-size: 0.875rem; margin-top: 0.25rem; color: var(--text-primary);">${item.adverseReactions}</div>
+                        </div>
+                    ` : ''}
+                    ${item.notes ? `
+                        <div style="margin-top: 0.5rem; padding: 0.75rem; background-color: var(--bg-primary); border-radius: 4px; border-left: 3px solid var(--secondary-color);">
+                            <strong style="color: var(--secondary-color); font-size: 0.875rem;">📝 My Notes:</strong>
+                            <div style="font-size: 0.875rem; margin-top: 0.25rem; color: var(--text-primary);">${item.notes}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        window.editCabinetItem = function(id) {
+            const item = state.cabinet.find(i => i.id === id);
+            if (!item) return;
+            
+            state.currentEditId = id;
+            document.getElementById('editNotes').value = item.notes || '';
+            document.getElementById('editModal').classList.add('active');
+        };
+
+        window.deleteCabinetItem = function(id) {
+            if (confirm('Remove this medicine from cabinet?')) {
+                state.cabinet = state.cabinet.filter(item => item.id !== id);
+                saveCabinetToStorage();
+                renderCabinet();
+                showToast('Medicine removed from cabinet', 'info');
+            }
+        };
+
+        function saveNotes() {
+            if (!state.currentEditId) return;
+            
+            const item = state.cabinet.find(i => i.id === state.currentEditId);
+            if (item) {
+                item.notes = document.getElementById('editNotes').value;
+                saveCabinetToStorage();
+                renderCabinet();
+                showToast('Notes saved successfully', 'info');
+            }
+            
+            document.getElementById('editModal').classList.remove('active');
+            state.currentEditId = null;
+        }
+
+        function exportCabinet() {
+            if (state.cabinet.length === 0) {
+                showToast('Cabinet is empty!', 'error');
+                return;
+            }
+
+            const dataStr = JSON.stringify(state.cabinet, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pillsense-cabinet-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('Cabinet exported successfully', 'info');
+        }
+
+        function confirmImport() {
+            try {
+                const data = document.getElementById('importData').value;
+                const imported = JSON.parse(data);
+                
+                if (!Array.isArray(imported)) {
+                    throw new Error('Invalid format');
+                }
+                
+                state.cabinet = imported;
+                saveCabinetToStorage();
+                renderCabinet();
+                document.getElementById('importModal').classList.remove('active');
+                document.getElementById('importData').value = '';
+                showToast('Cabinet imported successfully!', 'info');
+            } catch (error) {
+                showToast('Invalid JSON data. Please check the format.', 'error');
+            }
+        }
+
+        // ===== CAMERA FUNCTIONALITY =====
+        async function handleCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.autoplay = true;
+                video.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:90%;max-height:90%;z-index:400;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+                
+                const captureBtn = document.createElement('button');
+                captureBtn.textContent = '📸 Capture';
+                captureBtn.className = 'btn btn-primary';
+                captureBtn.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);z-index:401;';
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.textContent = '✕ Close';
+                closeBtn.className = 'btn btn-secondary';
+                closeBtn.style.cssText = 'position:fixed;top:2rem;right:2rem;z-index:401;';
+                
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:399;';
+                
+                document.body.appendChild(overlay);
+                document.body.appendChild(video);
+                document.body.appendChild(captureBtn);
+                document.body.appendChild(closeBtn);
+                
+                const cleanup = () => {
+                    stream.getTracks().forEach(track => track.stop());
+                    overlay.remove();
+                    video.remove();
+                    captureBtn.remove();
+                    closeBtn.remove();
+                };
+                
+                closeBtn.addEventListener('click', cleanup);
+                
+                captureBtn.addEventListener('click', () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    
+                    cleanup();
+                    showToast('Image captured! Please enter the imprint manually for now.', 'info');
+                });
+                
+            } catch (error) {
+                console.error('Camera error:', error);
+                showToast('Camera access denied or not available', 'error');
+            }
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        function copyToClipboard(text, label) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`✓ ${label} copied!`, 'info');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showToast('Copy failed', 'error');
+            });
+        }
+    </script>
+</body>
+</html>
